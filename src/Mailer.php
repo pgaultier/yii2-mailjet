@@ -74,83 +74,6 @@ class Mailer extends BaseMailer
      */
     public $messageClass = 'sweelix\mailjet\Message';
 
-    /**
-     * @param \sweelix\mailjet\Message $message
-     * @return array message as array that the MailJet API expects
-     */
-    protected function getMailJetMessage($message)
-    {
-        $fromEmails = Message::convertEmails($message->getFrom());
-        $toEmails = Message::convertEmails($message->getTo());
-
-        $mailJetMessage = [
-            'From' => $fromEmails[0],
-            'To' => $toEmails,
-        ];
-        /*
-        if (isset($fromEmails[0]['Name']) === true) {
-            $mailJetMessage['FromName'] = $fromEmails[0]['Name'];
-        }
-        */
-
-        /*
-        $sender = $message->getSender();
-        if (empty($sender) === false) {
-            $sender = Message::convertEmails($sender);
-            $mailJetMessage['Sender'] = $sender[0];
-        }
-        */
-
-        $cc = $message->getCc();
-        if (empty($cc) === false) {
-            $cc = Message::convertEmails($cc);
-            $mailJetMessage['Cc'] = $cc;
-        }
-
-        $bcc = $message->getBcc();
-        if (empty($cc) === false) {
-            $bcc = Message::convertEmails($bcc);
-            $mailJetMessage['Bcc'] = $bcc;
-        }
-
-        $attachments = $message->getAttachments();
-        if ($attachments !== null) {
-            $mailJetMessage['Attachments'] = $attachments;
-        }
-
-        $headers = $message->getHeaders();
-        if (empty($headers) === false) {
-            $mailJetMessage['Headers'] = $headers;
-        }
-        $mailJetMessage['TrackOpens'] = $message->getTrackOpens();
-        $mailJetMessage['TrackClicks'] = $message->getTrackClicks();
-
-        $templateModel = $message->getTemplateModel();
-        if (empty($templateModel) === false) {
-            $mailJetMessage['Variables'] = $templateModel;
-        }
-
-        $templateId = $message->getTemplateId();
-        if ($templateId === null) {
-            $mailJetMessage['Subject'] = $message->getSubject();
-            $textBody = $message->getTextBody();
-            if (empty($textBody) === false) {
-                $mailJetMessage['TextPart'] = $textBody;
-            }
-            $htmlBody = $message->getHtmlBody();
-            if (empty($htmlBody) === false) {
-                $mailJetMessage['HTMLPart'] = $htmlBody;
-            }
-        } else {
-            $mailJetMessage['TemplateID'] = $templateId;
-            $processLanguage = $message->getTemplateLanguage();
-            if ($processLanguage === true) {
-                $mailJetMessage['TemplateLanguage'] = $processLanguage;
-            }
-        }
-
-        return $mailJetMessage;
-    }
 
     /**
      * Sends the specified message.
@@ -167,8 +90,8 @@ class Mailer extends BaseMailer
 
     /**
      * Sends multiple messages at once.
-     * @param array $messages list of email messages, which should be sent.
-     * @param boolean $returnResponse whether to return the count of successfully sent messages or MailJet's response body
+     * @param Message[] $messages list of email messages, which should be sent.
+     * @param boolean $returnResponse whether to return the count of successfully sent messages or MailJet's response object
      * @return int|\Mailjet\Response number of successfully sent messages, or MailJet's api response if $returnResponse is set to true
      * @throws InvalidConfigException
      */
@@ -176,7 +99,7 @@ class Mailer extends BaseMailer
     {
         $mailJetMessages = [];
         foreach ($messages as $message) {
-            $mailJetMessages[] = $this->getMailJetMessage($message);
+            $mailJetMessages[] = $message->getMailJetMessage();
         }
 
         try {
