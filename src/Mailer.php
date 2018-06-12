@@ -94,6 +94,7 @@ class Mailer extends BaseMailer
      * @param boolean $returnResponse whether to return the count of successfully sent messages or MailJet's response object
      * @return int|\Mailjet\Response number of successfully sent messages, or MailJet's api response if $returnResponse is set to true
      * @throws InvalidConfigException
+     * @todo implement workaround for MailJet's limit of max. 50 recipients (mail addresses?) per API call
      */
     public function sendMultiple(array $messages, $returnResponse = false)
     {
