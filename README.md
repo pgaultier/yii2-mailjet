@@ -18,7 +18,7 @@ This extension allow the developper to use [Mailjet](https://www.mailjet.com/) a
 Installation
 ------------
 
-If you use Packagist for installing packages, then you can update your composer.json like this :
+If you use composer for installing packages, then you can update your composer.json like this:
 
 ``` json
 {
@@ -28,24 +28,32 @@ If you use Packagist for installing packages, then you can update your composer.
 }
 ```
 
-Howto use it
+or use the command:
+
+```
+composer require sweelix/yii2-mailjet
+```
+
+How to use it
 ------------
 
-Add extension to your configuration
+Add extension to your configuration:
 
 ``` php
 return [
-    //....
+    // ...
     'components' => [
         'mailer' => [
             'class' => 'sweelix\mailjet\Mailer',
-            'token' => '<your mailjet token>',
+            'apiKey' => '<your mailjet api key>',
+            'apiSecret' => '<your mailjet api secret>',
         ],
     ],
+    // ...
 ];
 ```
 
-You can send email as follow (using mailjet templates)
+You can send email as follows (using mailjet templates):
 
 ``` php
 Yii::$app->mailer->compose('contact/html')
@@ -60,13 +68,45 @@ Yii::$app->mailer->compose('contact/html')
 
 ```
 
+You can send multiple emails with only one API call as follows:
+
+``` php
+$messages = [];
+$messages[] = Yii::$app->mailer->compose()
+     ->setFrom('from@domain.com')
+     ->setTo(recipient2@example.org)
+     ->setSubject($form->subject)
+     ->setTemplateId(1234);
+
+$messages[] = Yii::$app->mailer->compose()
+     ->setFrom('from@domain.com')
+     ->setTo('recipient2@example.org')
+     ->setSubject($form->subject)
+     ->setTemplateId(1234);
+
+// add more messages as needed, but be aware of MailJet's limit of max. 50 recipients (email addresses?) per API call
+
+// option 1: call sendMultiple(), returns number of successfully sent messages
+$successCount = Yii::$app->mailer->sendMultiple($messages);
+// Mailer->apiResponse contains the last API response as \Mailjet\Response object, with detailed info for every (sent or failed) message
+$apiResponse = Yii::$app->mailer->apiResponse;
+
+
+// option 2: call sendMultiple() passing true as second parameter, directly returns \Mailjet\Response object
+$apiResponse = Yii::$app->mailer->sendMultiple($messages, true);
+```
+
+Use the methods `$message->setTextBody($text)` and `$message->setHtmlBody($html)` to set the email content directly, without using a MailJet template.
+
 For further instructions refer to the [related section in the Yii Definitive Guide](http://www.yiiframework.com/doc-2.0/guide-tutorial-mailing.html)
 
 
 Running the tests
 -----------------
 
-Before running the tests, you should edit the file tests/_bootstrap.php and change the defines :
+Please note that the tests need PHPUnit 5 to run.
+
+Before running the tests, you should edit the file tests/_bootstrap.php and change the defines:
 
 ``` php
 // ...
