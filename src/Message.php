@@ -666,11 +666,10 @@ class Message extends BaseMessage
 
     /**
      * @inheritdoc
-     * @todo make real serialization to make message compliant with MailjetAPI
      */
     public function toString()
     {
-        return serialize($this);
+        return json_encode($this->getMailJetMessage(), JSON_PRETTY_PRINT);
     }
 
 
