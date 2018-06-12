@@ -292,10 +292,9 @@ class MessageTest extends TestCase
         if (MAILJET_TEST_SEND === true) {
             $message = $this->createTestMessage();
             $message->setFrom(MAILJET_FROM);
-            // $message->setSender(MAILJET_SENDER);
             $message->setTo(MAILJET_TO);
-            $message->setSubject('Yii MailJet test message');
-            $message->setTextBody('Yii MailJet test body');
+            $message->setSubject('Yii MailJet test message: testBasicSend()');
+            $message->setTextBody('Yii MailJet test body: testBasicSend()');
             $this->assertTrue($message->send());
         }
     }
@@ -306,11 +305,10 @@ class MessageTest extends TestCase
             $message = $this->createOtherTestMessage();
             $message->setFrom(MAILJET_FROM);
             $message->setTo(MAILJET_TO);
-            $message->setSubject('Yii MailJet test message');
-            $message->setTextBody('Yii MailJet test body');
+            $message->setSubject('Yii MailJet test message: testParametersSend()');
+            $message->setTextBody('Yii MailJet test body: testParametersSend()');
             $this->assertTrue($message->send());
         }
-
     }
 
     public function testTemplateSend()

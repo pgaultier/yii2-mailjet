@@ -18,8 +18,8 @@ namespace sweelix\mailjet;
 use Mailjet\Client;
 use Mailjet\Resources;
 use yii\base\InvalidConfigException;
+use yii\helpers\ArrayHelper;
 use yii\mail\BaseMailer;
-use Exception;
 
 /**
  * This component allow user to send an email
@@ -31,7 +31,6 @@ use Exception;
  * @link http://www.sweelix.net
  * @package sweelix\mailjet
  * @since XXX
- * @todo implement batch messages using API
  */
 class Mailer extends BaseMailer
 {
@@ -66,16 +65,44 @@ class Mailer extends BaseMailer
     public $secured = true;
 
     /**
+     * @var \Mailjet\Response
+     */
+    public $apiResponse;
+
+    /**
      * @inheritdoc
      */
     public $messageClass = 'sweelix\mailjet\Message';
+
+
     /**
+     * Sends the specified message.
      * @param Message $message
      * @since XXX
      * @throws InvalidConfigException
      */
     public function sendMessage($message)
     {
+        $messages = [$message];
+        $result = $this->sendMultiple($messages);
+        return ($result == 1);
+    }
+
+    /**
+     * Sends multiple messages at once.
+     * @param Message[] $messages list of email messages, which should be sent.
+     * @param boolean $returnResponse whether to return the count of successfully sent messages or MailJet's response object
+     * @return int|\Mailjet\Response number of successfully sent messages, or MailJet's api response if $returnResponse is set to true
+     * @throws InvalidConfigException
+     * @todo implement workaround for MailJet's limit of max. 50 recipients (mail addresses?) per API call
+     */
+    public function sendMultiple(array $messages, $returnResponse = false)
+    {
+        $mailJetMessages = [];
+        foreach ($messages as $message) {
+            $mailJetMessages[] = $message->getMailJetMessage();
+        }
+
         try {
             if ($this->apiKey === null) {
                 throw new InvalidConfigException('API Key is missing');
@@ -94,97 +121,39 @@ class Mailer extends BaseMailer
 
             $client = new Client($this->apiKey, $this->apiSecret, $this->enable, $settings);
 
-            $fromEmails = Message::convertEmails($message->getFrom());
-            $toEmails = Message::convertEmails($message->getTo());
+            $this->apiResponse = $client->post(Resources::$Email, [
+                'body' => [
+                    'Messages' => $mailJetMessages,
+                ]
+            ]);
 
-            $mailJetMessage = [
-                // 'FromEmail' => $fromEmails[0]['Email'],
-                'From' => $fromEmails[0],
-                'To' => $toEmails,
-            ];
-            /*
-            if (isset($fromEmails[0]['Name']) === true) {
-                $mailJetMessage['FromName'] = $fromEmails[0]['Name'];
-            }
-            */
-
-            /*
-            $sender = $message->getSender();
-            if (empty($sender) === false) {
-                $sender = Message::convertEmails($sender);
-                $mailJetMessage['Sender'] = $sender[0];
-            }
-            */
-
-
-            $cc = $message->getCc();
-            if (empty($cc) === false) {
-                $cc = Message::convertEmails($cc);
-                $mailJetMessage['Cc'] = $cc;
-            }
-
-            $bcc = $message->getBcc();
-            if (empty($cc) === false) {
-                $bcc = Message::convertEmails($bcc);
-                $mailJetMessage['Bcc'] = $bcc;
-            }
-
-            $attachments = $message->getAttachments();
-            if ($attachments !== null) {
-                $mailJetMessage['Attachments'] = $attachments;
-            }
-
-            $headers = $message->getHeaders();
-            if (empty($headers) === false) {
-                $mailJetMessage['Headers'] = $headers;
-            }
-            $mailJetMessage['TrackOpens'] = $message->getTrackOpens();
-            $mailJetMessage['TrackClicks'] = $message->getTrackClicks();
-
-            $templateModel = $message->getTemplateModel();
-            if (empty($templateModel) === false) {
-                $mailJetMessage['Variables'] = $templateModel;
-            }
-
-            $templateId = $message->getTemplateId();
-            if ($templateId === null) {
-                $mailJetMessage['Subject'] = $message->getSubject();
-                $textBody = $message->getTextBody();
-                if (empty($textBody) === false) {
-                    $mailJetMessage['TextPart'] = $textBody;
-                }
-                $htmlBody = $message->getHtmlBody();
-                if (empty($htmlBody) === false) {
-                    $mailJetMessage['HTMLPart'] = $htmlBody;
-                }
-                $sendResult = $client->post(Resources::$Email, [
-                    'body' => [
-                        'Messages' => [
-                            $mailJetMessage,
-                        ]
-                    ]
-                ]);
-            } else {
-                $mailJetMessage['TemplateID'] = $templateId;
-                $processLanguage = $message->getTemplateLanguage();
-                if ($processLanguage === true) {
-                    $mailJetMessage['TemplateLanguage'] = $processLanguage;
-                }
-                $sendResult = $client->post(Resources::$Email, [
-                    'body' => [
-                        'Messages' => [
-                            $mailJetMessage,
-                        ]
-                    ]
-                ]);
-            }
             //TODO: handle error codes and log stuff
-            return $sendResult->success();
-        } catch (Exception $e) {
+
+            if ($returnResponse) {
+                return $this->apiResponse;
+            }
+
+            // count successfully sent messages using MailJet's response
+            // the format of the response body is:
+            // ['Messages' => [
+            //     0 => ['Status' => 'success', ...],
+            //     1 => ['Status' => 'success', ...],
+            //     ...
+            // ]]
+            $successCount = 0;
+            $resultBody = $this->apiResponse->getBody();
+            if ( ! empty($resultBody['Messages'])) {
+                $resultStatusColumns = ArrayHelper::getColumn($resultBody['Messages'], 'Status');
+                $statusCounts = array_count_values($resultStatusColumns);
+                if (isset($statusCounts['success'])) {
+                    $successCount = $statusCounts['success'];
+                }
+            }
+
+            return $successCount;
+
+        } catch (InvalidConfigException $e) {
             throw $e;
         }
     }
-
-
-
 }

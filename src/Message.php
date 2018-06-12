@@ -587,12 +587,89 @@ class Message extends BaseMessage
     }
 
     /**
+     * Builds an array that represents the message as the MailJet API expects it
+     * @return array message as array that the MailJet API expects
+     */
+    public function getMailJetMessage()
+    {
+        $fromEmails = Message::convertEmails($this->getFrom());
+        $toEmails = Message::convertEmails($this->getTo());
+
+        $mailJetMessage = [
+            'From' => $fromEmails[0],
+            'To' => $toEmails,
+        ];
+        /*
+        if (isset($fromEmails[0]['Name']) === true) {
+            $mailJetMessage['FromName'] = $fromEmails[0]['Name'];
+        }
+        */
+
+        /*
+        $sender = $this->getSender();
+        if (empty($sender) === false) {
+            $sender = Message::convertEmails($sender);
+            $mailJetMessage['Sender'] = $sender[0];
+        }
+        */
+
+        $cc = $this->getCc();
+        if (empty($cc) === false) {
+            $cc = Message::convertEmails($cc);
+            $mailJetMessage['Cc'] = $cc;
+        }
+
+        $bcc = $this->getBcc();
+        if (empty($cc) === false) {
+            $bcc = Message::convertEmails($bcc);
+            $mailJetMessage['Bcc'] = $bcc;
+        }
+
+        $attachments = $this->getAttachments();
+        if ($attachments !== null) {
+            $mailJetMessage['Attachments'] = $attachments;
+        }
+
+        $headers = $this->getHeaders();
+        if (empty($headers) === false) {
+            $mailJetMessage['Headers'] = $headers;
+        }
+        $mailJetMessage['TrackOpens'] = $this->getTrackOpens();
+        $mailJetMessage['TrackClicks'] = $this->getTrackClicks();
+
+        $templateModel = $this->getTemplateModel();
+        if (empty($templateModel) === false) {
+            $mailJetMessage['Variables'] = $templateModel;
+        }
+
+        $templateId = $this->getTemplateId();
+        if ($templateId === null) {
+            $mailJetMessage['Subject'] = $this->getSubject();
+            $textBody = $this->getTextBody();
+            if (empty($textBody) === false) {
+                $mailJetMessage['TextPart'] = $textBody;
+            }
+            $htmlBody = $this->getHtmlBody();
+            if (empty($htmlBody) === false) {
+                $mailJetMessage['HTMLPart'] = $htmlBody;
+            }
+        } else {
+            $mailJetMessage['TemplateID'] = $templateId;
+            $processLanguage = $this->getTemplateLanguage();
+            if ($processLanguage === true) {
+                $mailJetMessage['TemplateLanguage'] = $processLanguage;
+            }
+        }
+
+        return $mailJetMessage;
+    }
+
+    /**
      * @inheritdoc
-     * @todo make real serialization to make message compliant with MailjetAPI
      */
     public function toString()
     {
-        return serialize($this);
+        return json_encode($this->getMailJetMessage(), JSON_PRETTY_PRINT);
     }
 
 
@@ -624,6 +701,7 @@ class Message extends BaseMessage
         }
         return $emails;
     }
+
     public static function convertEmails($emailsData)
     {
         $emails = [];
