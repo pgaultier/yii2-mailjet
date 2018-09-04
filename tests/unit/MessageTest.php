@@ -245,28 +245,28 @@ class MessageTest extends TestCase
         $this->assertEquals(base64_encode('plop'), $message->getAttachments()[3]['Base64Content']);
 
         $cid = $message->embed(__FILE__, ['fileName' => 'file.php', 'contentType' => 'text/plain']);
-        $this->assertEquals('file.php', $message->getAttachments()[4]['Filename']);
-        $this->assertEquals('text/plain', $message->getAttachments()[4]['ContentType']);
-        $this->assertEquals(base64_encode(file_get_contents(__FILE__)), $message->getAttachments()[4]['Base64Content']);
-        $this->assertEquals($cid, $message->getAttachments()[4]['ContentID']);
+        $this->assertEquals('file.php', $message->getInlinedAttachments()[4]['Filename']);
+        $this->assertEquals('text/plain', $message->getInlinedAttachments()[4]['ContentType']);
+        $this->assertEquals(base64_encode(file_get_contents(__FILE__)), $message->getInlinedAttachments()[4]['Base64Content']);
+        $this->assertEquals($cid, $message->getInlinedAttachments()[4]['ContentID']);
 
         $cid = $message->embed(__FILE__);
-        $this->assertEquals('MessageTest.php', $message->getAttachments()[5]['Filename']);
-        $this->assertEquals('application/octet-stream', $message->getAttachments()[5]['ContentType']);
-        $this->assertEquals(base64_encode(file_get_contents(__FILE__)), $message->getAttachments()[5]['Base64Content']);
-        $this->assertEquals($cid, $message->getAttachments()[5]['ContentID']);
+        $this->assertEquals('MessageTest.php', $message->getInlinedAttachments()[5]['Filename']);
+        $this->assertEquals('application/octet-stream', $message->getInlinedAttachments()[5]['ContentType']);
+        $this->assertEquals(base64_encode(file_get_contents(__FILE__)), $message->getInlinedAttachments()[5]['Base64Content']);
+        $this->assertEquals($cid, $message->getInlinedAttachments()[5]['ContentID']);
 
         $cid = $message->embedContent('plop', ['fileName' => 'file.php', 'contentType' => 'text/plain']);
-        $this->assertEquals('file.php', $message->getAttachments()[6]['Filename']);
-        $this->assertEquals('text/plain', $message->getAttachments()[6]['ContentType']);
-        $this->assertEquals(base64_encode('plop'), $message->getAttachments()[6]['Base64Content']);
-        $this->assertEquals($cid, $message->getAttachments()[6]['ContentID']);
+        $this->assertEquals('file.php', $message->getInlinedAttachments()[6]['Filename']);
+        $this->assertEquals('text/plain', $message->getInlinedAttachments()[6]['ContentType']);
+        $this->assertEquals(base64_encode('plop'), $message->getInlinedAttachments()[6]['Base64Content']);
+        $this->assertEquals($cid, $message->getInlinedAttachments()[6]['ContentID']);
 
         $cid = $message->embedContent('plop', ['fileName' => 'file.php']);
-        $this->assertEquals('file.php', $message->getAttachments()[7]['Filename']);
-        $this->assertEquals('application/octet-stream', $message->getAttachments()[7]['ContentType']);
-        $this->assertEquals(base64_encode('plop'), $message->getAttachments()[7]['Base64Content']);
-        $this->assertEquals($cid, $message->getAttachments()[7]['ContentID']);
+        $this->assertEquals('file.php', $message->getInlinedAttachments()[7]['Filename']);
+        $this->assertEquals('application/octet-stream', $message->getInlinedAttachments()[7]['ContentType']);
+        $this->assertEquals(base64_encode('plop'), $message->getInlinedAttachments()[7]['Base64Content']);
+        $this->assertEquals($cid, $message->getInlinedAttachments()[7]['ContentID']);
     }
 
     public function testAttachException()
