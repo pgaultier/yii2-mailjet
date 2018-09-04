@@ -134,6 +134,12 @@ class Mailer extends BaseMailer
                 $mailJetMessage['Attachments'] = $attachments;
             }
 
+            //Get inilined attachments
+            $inlinedAttachments = $message->getInlinedAttachments();
+            if ($inlinedAttachments !== null) {
+                $mailJetMessage['InlinedAttachments'] = $inlinedAttachments;
+            }
+
             $headers = $message->getHeaders();
             if (empty($headers) === false) {
                 $mailJetMessage['Headers'] = $headers;

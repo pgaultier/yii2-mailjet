@@ -87,6 +87,11 @@ class Message extends BaseMessage
     protected $attachments = [];
 
     /**
+     * @var array
+     */
+    protected $inlinedAttachments = [];
+
+    /**
      * @var string
      */
     protected $tag;
@@ -497,6 +502,31 @@ class Message extends BaseMessage
     }
 
     /**
+     * @return array|null list of inlinedAttachments
+     * @since XXX
+     */
+    public function getInlinedAttachments()
+    {
+        if (empty($this->inlinedAttachments) === true) {
+            return null;
+        } else {
+            $inlinedAttachments = array_map(function($inlinedAttachment) {
+                $item = [
+                    'ContentType' => $inlinedAttachment['ContentType'],
+                    'Filename' => $inlinedAttachment['Name'],
+                    'Base64Content' => $inlinedAttachment['Content'],
+                ];
+                if (isset($inlinedAttachment['ContentID']) === true) {
+                    $item['ContentID'] = $inlinedAttachment['ContentID'];
+                }
+                return $item;
+            }, $this->inlinedAttachments);
+            return $inlinedAttachments;
+        }
+    }
+
+
+    /**
      * @inheritdoc
      */
     public function attach($fileName, array $options = [])
@@ -558,8 +588,8 @@ class Message extends BaseMessage
         } else {
             $embed['ContentType'] = 'application/octet-stream';
         }
-        $embed['ContentID'] = 'cid:' . uniqid();
-        $this->attachments[] = $embed;
+        $embed['ContentID'] = uniqid();
+        $this->inlinedAttachments[] = $embed;
         return $embed['ContentID'];
     }
 
@@ -581,8 +611,8 @@ class Message extends BaseMessage
         } else {
             $embed['ContentType'] = 'application/octet-stream';
         }
-        $embed['ContentID'] = 'cid:' . uniqid();
-        $this->attachments[] = $embed;
+        $embed['ContentID'] = uniqid();
+        $this->inlinedAttachments[] = $embed;
         return $embed['ContentID'];
     }
 
